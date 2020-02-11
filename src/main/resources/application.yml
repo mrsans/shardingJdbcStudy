@@ -1,0 +1,111 @@
+spring:
+# 相关的配置
+  shardingsphere:
+    props:
+      sql:
+        show: true
+    datasource:
+      # 配置数据源的名称
+      names: ds1,ds2,ds3
+      # 第一个数据源
+      ds1:
+        # 数据库连接池
+        type: com.zaxxer.hikari.HikariDataSource
+        # 数据库驱动
+        driver-class-name: com.mysql.jdbc.Driver
+        # 数据库链接
+        jdbcUrl: jdbc:mysql://localhost:3306/sharding1?serverTimezone=CTT&useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true
+        # 数据库用户名
+        username: root
+        # 数据库密码
+        password: root
+      # 第二个数据源
+      ds2:
+        # 数据库连接池
+        type: com.zaxxer.hikari.HikariDataSource
+        # 数据库驱动
+        driver-class-name: com.mysql.jdbc.Driver
+        # 数据库链接
+        jdbcUrl: jdbc:mysql://localhost:3306/sharding2?serverTimezone=CTT&useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true
+        # 数据库用户名
+        username: root
+        # 数据库密码
+        password: root
+      # 配置垂直分库策略
+      ds3:
+        # 数据库连接池
+        type: com.zaxxer.hikari.HikariDataSource
+        # 数据库驱动
+        driver-class-name: com.mysql.jdbc.Driver
+        # 数据库链接
+        jdbcUrl: jdbc:mysql://localhost:3306/sharding3?serverTimezone=CTT&useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true
+        # 数据库用户名
+        username: root
+        # 数据库密码
+        password: root
+    # 分库的策略
+    sharding:
+      tables:
+        # 垂直分库、分表，其实就是写死了
+        t_course:
+          database-strategy:
+            inline:
+              sharding-column: n_id
+              algorithm-expression: ds3
+        # 虽然垂直分库没有必要但是还要配置一下分表规则
+#          table-strategy:
+#            inline:
+#              sharding-column: n_id
+#              algorithm-expression: t_course
+
+        # 水平分库、分表
+        # 这个地方注意： sharding-jdbc会根据名称去找本节点，所以写sql的时候，要写此节点的名称
+        t_student:
+          # 配置数据库的分库策略
+          database-strategy:
+            # 行表达式模式
+            inline:
+              # 选择需要分库的字段，根据那个字段进行区分
+              sharding-column: n_card
+              # 表达式，c_card需要和上面的一致，groovy表达式
+              algorithm-expression: ds$->{n_card % 2 + 1}
+          # 表达式， 健康节点： 根据上一个节点找到此值， {1..2}为groovy语言，$会替换成{1..2}的一个值，数据库表是: t_student_1 , t_student_2
+          # 这个配置是告诉sharding有多少个表
+          actual-data-nodes: ds1.t_student_$->{1..2}
+          # 主键生成策略
+          key-generator:
+            # 对应的数据库表的主键
+            column: n_id
+            # 生成方式， 雪花模式
+            type: SNOWFLAKE
+          # 配置其分片策略和分片算法
+          table-strategy:
+            # 行表达式
+            inline:
+              # 配置sharding的计算列
+              sharding-column: n_id
+              # 配置sharding的表达式,对应的n_id必须和sharding-column的值对应，否则报错
+              algorithm-expression: t_student_$->{n_id % 2 +1}
+
+      # 主从规则，未做验证
+#      master-slave-rules:
+#        # 随机起一个名称，如果配置主从，那么需要修改分表策略：：：公共表修改
+#        # 分表策略改成： spring.shardingsphere.sharding.tables.t_public.actual-data-nodes=ms0.t_public
+#        # ms0 主从已经指向了 ds1、ds2数据源
+#        ms0:
+#          # 主节点
+#          master-data-source-name: ds1
+#          # 从节点
+#          slave-data-source-names: ds2
+
+
+mybatis.configuration.map-underscore-to-camel-case: true
+
+
+
+
+
+
+
+
+
