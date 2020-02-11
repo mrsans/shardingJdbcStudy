@@ -1,0 +1,34 @@
+group 'com.sans'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.1.6.RELEASE")
+    }
+}
+
+repositories {
+    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+}
+
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter-web")
+    compile 'org.apache.shardingsphere:sharding-jdbc-spring-boot-starter:4.0.0-RC1'
+    compile 'org.mybatis.spring.boot:mybatis-spring-boot-starter:1.3.2'
+    compile 'mysql:mysql-connector-java:8.0.15'
+    annotationProcessor 'org.projectlombok:lombok:1.18.8'
+    compileOnly 'org.projectlombok:lombok:1.18.8'
+    testCompile 'org.springframework.boot:spring-boot-starter-test'
+}
